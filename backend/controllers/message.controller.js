@@ -2,37 +2,66 @@ import Conversation from "../models/conversation.model.js"
 import Message from "../models/message.model.js"
 
 export const sendMessage = async (req, res) => {
-    const {message} = req.body;
-    const {id : receiverId} = req.params;
-    const senderId = req.user._id;
-
-
-    let conversation = await Conversation.findOne({
-        participants : {$all: [senderId, receiverId]}
-    });
-    if(!conversation){
-        conversation = await Conversation.create({
-            participants : [senderId, receiverId],
+    try {
+        const {message} = req.body;
+        const {id : receiverId} = req.params;
+        const senderId = req.user._id;
+    
+    
+        let conversation = await Conversation.findOne({
+            participants : {$all: [senderId, receiverId]}
+        });
+        if(!conversation){
+            conversation = await Conversation.create({
+                participants : [senderId, receiverId],
+            })
+        }
+        const newMessage = new Message({
+            senderId,
+            receiverId,
+            message
+        })
+        if(newMessage){
+            conversation.messages.push(newMessage._id);
+        }
+    
+        // SOCKET IO FUNCTIONALITY HERE
+    
+        // await conversation.save();
+        // await newMessage.save();
+    
+        // this will run in parallel
+        await Promise.all([conversation.save(), newMessage.save()]);
+        return res.status(200).json(newMessage)
+    } catch (error) {
+        console.error("Error sending messages", error.message);
+        return res.status(500).json({
+            error : "Internal server error in message sending"
         })
     }
-    const newMessage = new Message({
-        senderId,
-        receiverId,
-        message
-    })
-    if(newMessage){
-        conversation.messages.push(newMessage._id);
-    }
-
-    // SOCKET IO FUNCTIONALITY HERE
-    
-    // await conversation.save();
-    // await newMessage.save();
-
-    // this will run in parallel
-    await Promise.all([conversation.save(), newMessage.save()]);
-    return res.status(200).json(newMessage)
 }
+
 export const getMessages = async (req, res) => {
-    
+    try {
+        // renaming id to userToChatId 
+        const {id: userToChatId} = req.params;
+        const senderId = req.user._id;
+
+        // populate("messages"): The populate method in Mongoose is used to replace the field messages (which is likely an array of message IDs) with the actual message documents from the Messages collection. This is a way of "joining" related documents and retrieving the complete messages instead of just their IDs.
+        const conversation = await Conversation.findOne({
+            participants : {$all : [senderId, userToChatId]}
+        }).populate("messages"); // NOT REFERENCE BUT ACTUAL MESSAGES
+
+        if(!conversation){
+            res.statu(200).json([]);
+        }
+        const messages = conversation.messages;
+        res.status(200).json(messages);
+        
+    } catch (error) {
+        console.error("Error sending messages", error.message);
+        return res.status(500).json({
+            error : "Internal server error in message sending"
+        })
+    }
 }
