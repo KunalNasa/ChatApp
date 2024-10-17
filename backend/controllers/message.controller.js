@@ -53,15 +53,18 @@ export const getMessages = async (req, res) => {
         }).populate("messages"); // NOT REFERENCE BUT ACTUAL MESSAGES
 
         if(!conversation){
-            res.statu(200).json([]);
+            return res.status(200).json([]);
         }
         const messages = conversation.messages;
-        res.status(200).json(messages);
+        if(messages){
+            return res.status(200).json(messages);
+        }
         
     } catch (error) {
         console.error("Error sending messages", error.message);
         return res.status(500).json({
-            error : "Internal server error in message sending"
+            error : error.message
         })
     }
+    
 }
