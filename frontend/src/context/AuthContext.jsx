@@ -2,6 +2,8 @@ import { createContext, useContext, useState } from "react";
 
 export const AuthContext = createContext();
 
+// hook to provide AuthContext in useContext
+// Rather than calling useContext(AuthContext); call useAuthConext
 // eslint-disable-next-line react-refresh/only-export-components
 export const useAuthContext = () => {
 	return useContext(AuthContext);

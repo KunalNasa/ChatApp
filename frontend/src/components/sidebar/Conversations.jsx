@@ -3,6 +3,7 @@ import { getRandomEmoji } from "../../utils/emojis";
 import Conversation from "./Conversation";
 
 const Conversations = () => {
+	// conversations - return all users from user Model
 	const { loading, conversations } = useGetConversations();
 	return (
 		<div className='py-2 flex flex-col overflow-auto'>
