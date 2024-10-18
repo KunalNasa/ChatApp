@@ -13,16 +13,18 @@ const io = new Server(server, {
     }
 });
 
+const userSocketMap = {}; // {userId : socketId}
+
 export const getReceiverSocketId = (receiverId) => {
 	return userSocketMap[receiverId];
 };
-const userSocketMap = {}; // {userId : socketId}
 
 
-// socket will be a user (or userId)
+// socket will be a user 
 io.on('connection', (socket) => {
     console.log("User connected", socket.id);
 
+    // from front end, pushing userId into query in frontend
     const userId = socket.handshake.query.userId;
     if(userId != undefined){
         userSocketMap[userId] = socket.id;
